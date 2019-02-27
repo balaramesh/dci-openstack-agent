@@ -1,1 +1,172 @@
 ---
+  # All these actions will be run on the undercloud node.
+- delegate_to: undercloud
+  block:
+    # In the case you jump better different version of OpenStack, you may want
+    # to store the release name in a local fact.
+    - name: Set the openstack release name
+      set_fact:
+        release: 'rocky'
+
+    - name: Set the hostname
+      hostname:
+        name: dci-infra-undercloud
+      become: true
+
+    - name: Create directories for installation
+      file:
+        path: '/home/stack/{{ item }}'
+        state: directory
+      with_items:
+        - images
+        - templates
+
+    # If you need new configuration keys, you can them in your settings.yml.
+    # They will be available in the playbook as regular Ansible variables.
+    - name: Register the undercloud
+      redhat_subscription:
+        username: '{{ rhsm_username }}'
+        password: '{{ rhsm_password }}'
+        pool_ids: '{{ rhsm_pool_ids }}'
+      become: true
+
+    - name: Enable RHEL repositories
+      shell: >
+        subscription-manager repos
+        --disable=*
+        --enable=rhel-7-server-rpms
+        --enable=rhel-7-server-extras-rpms
+        --enable=rhel-7-server-rh-common-rpms
+        {% if release == 'rocky' %}
+        --enable=rhel-7-server-openstack-14-rpms
+        {% endif %}
+        {% if release >= 'newton' %}
+        --enable=rhel-ha-for-rhel-7-server-rpms
+        {% endif %}
+        {% if release == 'pike' %}
+        --enable=rhel-7-server-rhceph-2-tools-rpms
+        {% elif release >= 'queens' %}
+        --enable=rhel-7-server-rhceph-3-tools-rpms
+        {% endif %}
+      register: rhsm
+      until: rhsm.rc == 0
+      retries: 5
+      delay: 10
+      become: true
+
+    # DCI dynamically generates a repo file at the beginning of a new run.
+    # You have to copy it in in the Undercloud Yum configuration, otherwise
+    # the packages coming from DCI won't be used.
+    # In this example we fetch it from the jumpbox.
+    - name: Enable DCI Openstack repository
+      copy:
+        src: /etc/yum.repos.d/dci.repo
+        dest: /etc/yum.repos.d/dci.repo
+      become: true
+
+    - name: Ensure packages are updated
+      yum:
+        name: '*'
+        state: latest
+      become: true
+
+    - name: Reboot the undercloud
+      shell: |
+        sleep 3
+        reboot
+      become: true
+      async: 1
+      poll: 0
+
+    - name: Wait for the undercloud node to be back online
+      wait_for:
+        host: '{{ hostvars.localhost.undercloud_ip }}'
+        port: 22
+        search_regex: OpenSSH
+        delay: 30
+      delegate_to: localhost
+
+    - name: Install python-tripleoclient
+      yum:
+        name: python-tripleoclient
+      become: true
+
+    - name: Prepare container images
+      shell: >
+        openstack tripleo container image prepare default \
+        --local-push-destination \
+        --output-env-file /home/stack/containers-prepare-parameter.yaml
+    
+    - name: Copy undercloud config template
+      copy:
+        src: "{% if release >= 'rocky' %}/usr/share/python-tripleoclient{% else %}/usr/share/instack-undercloud{% endif %}/undercloud.conf.sample"
+        dest: /home/stack/undercloud.conf
+        remote_src: yes
+
+    - name: Customize the undercloud config for containerized env
+      ini_file:
+        path: /home/stack/undercloud.conf
+        section: '{{ item.section }}'
+        option: '{{ item.option }}'
+        value: '{{ item.value }}'
+      with_items:
+        - {"section": "DEFAULT", "option": "overcloud_domain_name", "value": "dci-overcloud.netapp.com"}
+        - {"section": "DEFAULT", "option": "undercloud_nameservers", "value": "8.8.8.8"}
+        - {"section": "ctlplane-subnet", "option": "masquerade", "value": "true"}
+        - {"section": "DEFAULT", "option": "local_interface", "value": "eth0"}
+      when: release >= 'rocky'
+
+    - name: Install the undercloud
+      become_user: stack
+      shell: |
+        openstack undercloud install
+
+    - name: Download Overcloud images
+      yum:
+        name:
+          - rhosp-director-images
+          - rhosp-director-images-ipa
+      become: true
+
+    - name: Extract the archives
+      unarchive:
+        src: '/usr/share/rhosp-director-images/{{ item }}.tar'
+        dest: /home/stack/images/
+        remote_src: true
+      with_items:
+        - ironic-python-agent-latest-14.0
+        - overcloud-full-latest-14.0
+
+    - name: Upload images to glance
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud image upload --image-path /home/stack/images/
+      args:
+        chdir: /home/stack/images/
+
+    - name: Configure the nameserver for the overcloud
+      shell: |
+        source /home/stack/stackrc
+        openstack subnet set {% for dns in openstack_dnsservers %}--dns-nameserver {{ dns }} {% endfor %} ctlplane-subnet
+      when: release >= 'rocky'
+
+    - name: Copy the baremetal inventory file
+      template:
+        src: instackenv.json
+        dest: /home/stack/templates/instackenv.json
+
+    - name: Import the overcloud nodes
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud node import /home/stack/templates/instackenv.json
+
+    - name: Run the introspection
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud node introspect --all-manageable --provide
+
+    - name: Tag the nodes into required profiles
+      shell: |
+        source /home/stack/stackrc
+        openstack baremetal node set --property capabilities='profile:compute,boot_option:local' dci-overcloud-compute
+        openstack baremetal node set --property capabilities='profile:control,boot_option:local' dci-overcloud-control
