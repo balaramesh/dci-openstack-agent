@@ -11,11 +11,22 @@
     - name: Create a stack user
       user:
         name: stack
-        
+    
+    - name: Create stack sudoers.d file
+      file:
+        path: /etc/sudoers.d/stack
+        state: touch
+        mode: 0440
+
+    - name: Disable password requirements for stack user
+      lineinfile:
+        path: /etc/sudoers.d/stack
+        line: 'stack ALL=(root) NOPASSWD:ALL'
+
     - name: Set the hostname
       hostname:
-        name: dci-infra-undercloud
-      become_user: stack
+        name: dci-infra-undercloud.netapp.com
+      become: true
 
     - name: touch a file as the stack user
       file:
@@ -38,7 +49,7 @@
         username: '{{ rhsm_username }}'
         password: '{{ rhsm_password }}'
         pool_ids: '{{ rhsm_pool_ids }}'
-      become_user: stack
+      become: true
 
     - name: Enable RHEL repositories
       shell: >
@@ -62,7 +73,7 @@
       until: rhsm.rc == 0
       retries: 5
       delay: 10
-      become_user: stack
+      become: true
 
     # DCI dynamically generates a repo file at the beginning of a new run.
     # You have to copy it in in the Undercloud Yum configuration, otherwise
@@ -78,7 +89,7 @@
       yum:
         name: '*'
         state: latest
-      become_user: stack
+      become: true
 
    # - name: Reboot the undercloud
    #   shell: |
@@ -88,18 +99,18 @@
    #   async: 1
    #   poll: 0
 
-    #- name: Wait for the undercloud node to be back online
-    #  wait_for:
-    #    host: '{{ hostvars.localhost.undercloud_ip }}'
-    #    port: 22
-    #    search_regex: OpenSSH
-    #    delay: 30
-    #  delegate_to: localhost
+   # - name: Wait for the undercloud node to be back online
+   #   wait_for:
+   #     host: '{{ hostvars.localhost.undercloud_ip }}'
+   #     port: 22
+   #     search_regex: OpenSSH
+   #     delay: 30
+   #   delegate_to: localhost
 
     - name: Install python-tripleoclient
       yum:
         name: python-tripleoclient
-      become_user: stack
+      become: true
 
     - name: Prepare container images
       shell: >
@@ -150,6 +161,7 @@
       with_items:
         - ironic-python-agent-latest-14.0
         - overcloud-full-latest-14.0
+      become_user: stack
 
     - name: Upload images to glance
       shell: |
