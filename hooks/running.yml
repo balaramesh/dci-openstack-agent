@@ -7,11 +7,20 @@
     - name: Set the openstack release name
       set_fact:
         release: 'rocky'
-
+    
+    - name: Create a stack user
+      user:
+        name: stack
+        
     - name: Set the hostname
       hostname:
         name: dci-infra-undercloud
-      become: true
+      become_user: stack
+
+    - name: touch a file as the stack user
+      file:
+        path: /home/stack/testfile
+        state: touch
 
     - name: Create directories for installation
       file:
@@ -20,6 +29,7 @@
       with_items:
         - images
         - templates
+      become_user: stack
 
     # If you need new configuration keys, you can them in your settings.yml.
     # They will be available in the playbook as regular Ansible variables.
@@ -28,7 +38,7 @@
         username: '{{ rhsm_username }}'
         password: '{{ rhsm_password }}'
         pool_ids: '{{ rhsm_pool_ids }}'
-      become: true
+      become_user: stack
 
     - name: Enable RHEL repositories
       shell: >
@@ -52,7 +62,7 @@
       until: rhsm.rc == 0
       retries: 5
       delay: 10
-      become: true
+      become_user: stack
 
     # DCI dynamically generates a repo file at the beginning of a new run.
     # You have to copy it in in the Undercloud Yum configuration, otherwise
@@ -68,40 +78,42 @@
       yum:
         name: '*'
         state: latest
-      become: true
+      become_user: stack
 
-    - name: Reboot the undercloud
-      shell: |
-        sleep 3
-        reboot
-      become: true
-      async: 1
-      poll: 0
+   # - name: Reboot the undercloud
+   #   shell: |
+   #     sleep 3
+   #     reboot
+   #   become: true
+   #   async: 1
+   #   poll: 0
 
-    - name: Wait for the undercloud node to be back online
-      wait_for:
-        host: '{{ hostvars.localhost.undercloud_ip }}'
-        port: 22
-        search_regex: OpenSSH
-        delay: 30
-      delegate_to: localhost
+    #- name: Wait for the undercloud node to be back online
+    #  wait_for:
+    #    host: '{{ hostvars.localhost.undercloud_ip }}'
+    #    port: 22
+    #    search_regex: OpenSSH
+    #    delay: 30
+    #  delegate_to: localhost
 
     - name: Install python-tripleoclient
       yum:
         name: python-tripleoclient
-      become: true
+      become_user: stack
 
     - name: Prepare container images
       shell: >
         openstack tripleo container image prepare default \
         --local-push-destination \
         --output-env-file /home/stack/containers-prepare-parameter.yaml
+      become_user: stack
     
     - name: Copy undercloud config template
       copy:
         src: "{% if release >= 'rocky' %}/usr/share/python-tripleoclient{% else %}/usr/share/instack-undercloud{% endif %}/undercloud.conf.sample"
         dest: /home/stack/undercloud.conf
         remote_src: yes
+      become_user: stack
 
     - name: Customize the undercloud config for containerized env
       ini_file:
@@ -115,11 +127,13 @@
         - {"section": "ctlplane-subnet", "option": "masquerade", "value": "true"}
         - {"section": "DEFAULT", "option": "local_interface", "value": "eth0"}
       when: release >= 'rocky'
+      become_user: stack
 
     - name: Install the undercloud
       become_user: stack
-      shell: |
-        openstack undercloud install
+      shell: openstack undercloud install
+      args:
+        chdir: /home/stack
 
     - name: Download Overcloud images
       yum:

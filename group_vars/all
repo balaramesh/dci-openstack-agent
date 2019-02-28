@@ -24,6 +24,10 @@ skip_certification: false
 
 # To skip downloading some container images
 skip_container_images: []
+undercloud_ip: 192.168.122.161
+rhsm_username: bala.ramesh
+rhsm_password: 
+rhsm_pool_ids: 
 
 #######################################
 ## Settings for Tempest              ##
