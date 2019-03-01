@@ -136,7 +136,7 @@
         - {"section": "DEFAULT", "option": "overcloud_domain_name", "value": "dci-overcloud.netapp.com"}
         - {"section": "DEFAULT", "option": "undercloud_nameservers", "value": "8.8.8.8"}
         - {"section": "ctlplane-subnet", "option": "masquerade", "value": "true"}
-        - {"section": "DEFAULT", "option": "local_interface", "value": "eth0"}
+        - {"section": "DEFAULT", "option": "local_interface", "value": "eth1"}
       when: release >= 'rocky'
       become_user: stack
 
@@ -196,3 +196,4 @@
         source /home/stack/stackrc
         openstack baremetal node set --property capabilities='profile:compute,boot_option:local' dci-overcloud-compute
         openstack baremetal node set --property capabilities='profile:control,boot_option:local' dci-overcloud-control
+
