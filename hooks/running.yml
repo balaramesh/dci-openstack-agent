@@ -91,21 +91,21 @@
         state: latest
       become: true
 
-   # - name: Reboot the undercloud
-   #   shell: |
-   #     sleep 3
-   #     reboot
-   #   become: true
-   #   async: 1
-   #   poll: 0
+    - name: Reboot the undercloud
+      shell: |
+        sleep 3
+        reboot
+      become: true
+      async: 1
+      poll: 0
 
-   # - name: Wait for the undercloud node to be back online
-   #   wait_for:
-   #     host: '{{ hostvars.localhost.undercloud_ip }}'
-   #     port: 22
-   #     search_regex: OpenSSH
-   #     delay: 30
-   #   delegate_to: localhost
+    - name: Wait for the undercloud node to be back online
+      wait_for:
+        host: '{{ hostvars.localhost.undercloud_ip }}'
+        port: 22
+        search_regex: OpenSSH
+        delay: 30
+      delegate_to: localhost
 
     - name: Install python-tripleoclient
       yum:
@@ -178,13 +178,14 @@
 
     - name: Copy the baremetal inventory file
       template:
-        src: instackenv.json
-        dest: /home/stack/templates/instackenv.json
+        src: instackenv.yaml.j2
+        dest: /home/stack/templates/instackenv.yaml
+      become_user: stack
 
     - name: Import the overcloud nodes
       shell: |
         source /home/stack/stackrc
-        openstack overcloud node import /home/stack/templates/instackenv.json
+        openstack overcloud node import /home/stack/templates/instackenv.yaml
 
     - name: Run the introspection
       shell: |
@@ -195,5 +196,18 @@
       shell: |
         source /home/stack/stackrc
         openstack baremetal node set --property capabilities='profile:compute,boot_option:local' dci-overcloud-compute
-        openstack baremetal node set --property capabilities='profile:control,boot_option:local' dci-overcloud-control
+        openstack baremetal node set --property capabilities='profile:control,boot_option:local' dci-overcloud-controller
+
+    - name: Create node-info file for defining node count and flavors
+      template:
+        src: node-info.yaml.j2
+        dest: /home/stack/templates/node-info.yaml
+      become_user: stack
+
+    - name: Deploy the overcloud
+      shell: |
+        source /home/stack/stackrc
+        openstack overcloud deploy --templates -e /home/stack/templates/node-info.yaml \
+        -e /home/stack/containers-prepare-parameter.yaml \
+        -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
 

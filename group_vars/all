@@ -28,7 +28,11 @@ undercloud_ip: 192.168.122.161
 rhsm_username: bala.ramesh
 rhsm_password: 
 rhsm_pool_ids: 
-
+openstack_dnsservers: [8.8.4.4]
+overcloud_controller_mac: "52:54:00:b9:fd:1d"
+overcloud_controller_pm_port: "6235"
+overcloud_compute_mac: "52:54:00:51:b1:29"
+overcloud_compute_pm_port: "6236"
 #######################################
 ## Settings for Tempest              ##
 ##  adjust to match your deployment  ##

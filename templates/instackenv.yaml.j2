@@ -1,0 +1,17 @@
+nodes:
+  - mac:
+      - "{{ overcloud_controller_mac }}"
+    name: "overcloud-controller"
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "Netapp123"
+    pm_addr: "192.168.122.1"
+    pm_port: "{{ overcloud_controller_pm_port }}"
+  - mac:
+      - "{{ overcloud_compute_mac }}"
+    name: "overcloud-compute"
+    pm_type: "ipmi"
+    pm_user: "admin"
+    pm_password: "Netapp123"
+    pm_addr: "192.168.122.1"
+    pm_port: "{{ overcloud_compute_pm_port }}"
