@@ -195,8 +195,8 @@
     - name: Tag the nodes into required profiles
       shell: |
         source /home/stack/stackrc
-        openstack baremetal node set --property capabilities='profile:compute,boot_option:local' dci-overcloud-compute
-        openstack baremetal node set --property capabilities='profile:control,boot_option:local' dci-overcloud-controller
+        openstack baremetal node set --property capabilities='profile:compute,boot_option:local' overcloud-compute
+        openstack baremetal node set --property capabilities='profile:control,boot_option:local' overcloud-controller
 
     - name: Create node-info file for defining node count and flavors
       template:
@@ -210,4 +210,4 @@
         openstack overcloud deploy --templates -e /home/stack/templates/node-info.yaml \
         -e /home/stack/containers-prepare-parameter.yaml \
         -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
-
+      become_user: stack
