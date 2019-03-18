@@ -1,1 +1,26 @@
-dci_topic: OSP10
+dci_topic: OSP14
+
+netapp_nfs_backend:
+  backendname: tripleo_netapp_nfs
+  username: admin
+  password: password
+  hostname: 192.168.112.113
+  vserver: bala
+  nfsshares: 192.168.112.114:/test
+
+netapp_iscsi_backend:
+  backendname: tripleo_netapp_iscsi
+  username: admin
+  password: password
+  hostname: 192.168.112.113
+  vserver: iscsi_vserver
+
+undercloud_ip: 192.168.122.170
+rhsm_username: 
+rhsm_password: 
+rhsm_pool_ids: 
+openstack_dnsservers: [8.8.4.4]
+overcloud_controller_mac: "52:54:00:b9:fd:1d"
+overcloud_controller_pm_port: "6235"
+overcloud_compute_mac: "52:54:00:51:b1:29"
+overcloud_compute_pm_port: "6236"
