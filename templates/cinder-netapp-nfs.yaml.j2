@@ -1,0 +1,24 @@
+# A Heat environment file which can be used to enable a
+# a Cinder NetApp backend, configured via puppet
+resource_registry:
+  OS::TripleO::Services::CinderBackendNetApp: /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-backend-netapp.yaml
+
+parameter_defaults:
+  CinderEnableNetappBackend: true
+  CinderNetappBackendName: '{{ netapp_nfs_backend.backendname }}'
+  CinderNetappLogin: '{{ netapp_nfs_backend.username }}'
+  CinderNetappPassword: '{{ netapp_nfs_backend.password }}'
+  CinderNetappServerHostname: '{{ netapp_nfs_backend.hostname }}'
+  CinderNetappServerPort: '80'
+  CinderNetappSizeMultiplier: '1.2'
+  CinderNetappStorageFamily: 'ontap_cluster'
+  CinderNetappStorageProtocol: 'nfs'
+  CinderNetappTransportType: 'http'
+  CinderNetappVfiler: ''
+  CinderNetappVolumeList: ''
+  CinderNetappVserver: '{{ netapp_nfs_backend.vserver}}'
+  CinderNetappPartnerBackendName: ''
+  CinderNetappNfsShares: '{{ netapp_nfs_backend.nfsshares}}'
+  CinderNetappNfsSharesConfig: '/etc/cinder/shares.conf'
+  CinderNetappNfsMountOptions: ''
+  CinderNetappCopyOffloadToolPath: ''
