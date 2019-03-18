@@ -1,0 +1,16 @@
+# A Heat environment file which can be used to enable a
+# a Cinder NetApp backend, configured via puppet
+resource_registry:
+  OS::TripleO::Services::CinderBackendNetApp: /usr/share/openstack-tripleo-heat-templates/puppet/services/cinder-backend-netapp.yaml
+
+parameter_defaults:
+  CinderEnableNetappBackend: true
+  CinderNetappBackendName: '{{ netapp_iscsi_backend.backendname }}'
+  CinderNetappLogin: '{{ netapp_iscsi_backend.username }}'
+  CinderNetappPassword: '{{ netapp_iscsi_backend.password }}'
+  CinderNetappServerHostname: '{{ netapp_iscsi_backend.hostname }}'
+  CinderNetappServerPort: '80'
+  CinderNetappStorageFamily: 'ontap_cluster'
+  CinderNetappStorageProtocol: 'iscsi'
+  CinderNetappTransportType: 'http'
+  CinderNetappVserver: '{{ netapp_iscsi_backend.vserver}}'
