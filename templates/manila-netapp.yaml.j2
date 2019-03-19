@@ -1,0 +1,19 @@
+# This environment file enables Manila with the Netapp backend.
+resource_registry:
+  OS::TripleO::Services::ManilaApi: /usr/share/openstack-tripleo-heat-templates/deployment/manila/manila-api-container-puppet.yaml
+  OS::TripleO::Services::ManilaScheduler: /usr/share/openstack-tripleo-heat-templates/deployment/manila/manila-scheduler-container-puppet.yam
+  # Only manila-share is pacemaker managed:
+  OS::TripleO::Services::ManilaShare: /usr/share/openstack-tripleo-heat-templates/docker/deployment/manila/manila-share-pacemaker-puppet.yaml
+  OS::TripleO::Services::ManilaBackendNetapp: /usr/share/openstack-tripleo-heat-templates/puppet/services/manila-backend-netapp.yaml
+
+parameter_defaults:
+  ManilaNetappBackendName: tripleo_netapp
+  ManilaNetappDriverHandlesShareServers: true
+  ManilaNetappLogin: '{{ netapp_manila.username }}'
+  ManilaNetappPassword: '{{ netapp_manila.password }}'
+  ManilaNetappServerHostname: '{{ netapp_manila.hostname }}'
+  ManilaNetappTransportType: 'http'
+  ManilaNetappStorageFamily: 'ontap_cluster'
+  ManilaNetappServerPort: 80
+  ManilaNetappAggrNameSearchPattern: '(.*)'
+  ManilaNetappRootVolumeAggr: '{{ netapp_manila.rootvolumeaggr}}'
