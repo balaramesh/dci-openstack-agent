@@ -30,3 +30,9 @@ netapp_manila:
   password: password
   hostname: hostname
   rootvolumeaggr: root volume aggregate
+
+sf_backend:
+  username: admin
+  hostname: ip
+  password: password
+  account_prefix: dci

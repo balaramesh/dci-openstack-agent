@@ -1,0 +1,32 @@
+parameter_defaults:
+  ExtraConfig:
+    cinder::config::cinder_config:
+        tripleo_sf1/volume_driver:
+                value: cinder.volume.drivers.solidfire.SolidFireDriver
+        tripleo_sf1/volume_backend_name:
+                value: tripleo_sf1
+        tripleo_sf1/san_login:
+                value: "{{ sf_backend.username }}"
+        tripleo_sf1/san_password:
+                value: "{{ sf_backend.password }}"
+        tripleo_sf1/san_ip:
+                value: "{{ sf_backend.hostname }}"
+        tripleo_sf1/sf_account_prefix:
+                value: "{{ sf_backend.account_prefix }}"
+        tripleo_sf1/image_volume_cache_enabled:
+                value: True
+        tripleo_sf2/volume_driver:
+                value: cinder.volume.drivers.solidfire.SolidFireDriver
+        tripleo_sf2/volume_backend_name:
+                value: tripleo_sf2
+        tripleo_sf2/san_login:
+                value: "{{ sf_backend.username }}"
+        tripleo_sf2/san_password:
+                value: "{{ sf_backend.password }}"
+        tripleo_sf2/san_ip:
+                value: "{{ sf_backend.hostname }}"
+        tripleo_sf2/sf_account_prefix:
+                value: "{{ sf_backend.account_prefix }}"
+        tripleo_sf2/image_volume_cache_enabled:
+                value: True
+    cinder_user_enabled_backends: ['tripleo_sf1','tripleo_sf2']

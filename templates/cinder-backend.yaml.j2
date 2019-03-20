@@ -1,0 +1,72 @@
+parameter_defaults:
+  ExtraConfig:
+    cinder::config::cinder_config:
+        tripleo_netapp_nfs/volume_driver:
+                value: cinder.volume.drivers.netapp.common.NetAppDriver
+        tripleo_netapp_nfs/netapp_storage_family:
+                value: ontap_cluster
+        tripleo_netapp_nfs/netapp_storage_protocol:
+                value: nfs
+        tripleo_netapp_nfs/netapp_server_hostname:
+                value: 10.250.117.102
+        tripleo_netapp_nfs/netapp_server_port:
+                value: 80
+        tripleo_netapp_nfs/netapp_login:
+                value: admin
+        tripleo_netapp_nfs/netapp_password:
+                value: Netapp123
+        tripleo_netapp_nfs/volume_backend_name:
+                value: tripleo_netapp_nfs
+        tripleo_netapp_nfs/nfs_shares_config:
+                value: /etc/cinder/nfs_shares
+        tripleo_netapp_nfs/netapp_transport_type:
+                value: http
+        tripleo_netapp_iscsi/volume_driver:
+                value: cinder.volume.drivers.netapp.common.NetAppDriver
+        tripleo_netapp_iscsi/netapp_storage_family:
+                value: ontap_cluster
+        tripleo_netapp_iscsi/netapp_storage_protocol:
+                value: iscsi
+        tripleo_netapp_iscsi/netapp_server_hostname:
+                value: 10.250.117.102
+        tripleo_netapp_iscsi/netapp_server_port:
+                value: 80
+        tripleo_netapp_iscsi/netapp_login:
+                value: admin
+        tripleo_netapp_iscsi/netapp_password:
+                value: Netapp123
+        tripleo_netapp_iscsi/volume_backend_name:
+                value: tripleo_netapp_iscsi
+        tripleo_netapp_iscsi/netapp_vserver:
+                value: bala
+        tripleo_netapp_iscsi/netapp_transport_type:
+                value: http
+        tripleo_sf1/volume_driver:
+                value: cinder.volume.drivers.solidfire.SolidFireDriver
+        tripleo_sf1/volume_backend_name:
+                value: tripleo_sf1
+        tripleo_sf1/san_login:
+                value: openstack-ci
+        tripleo_sf1/san_password:
+                value: Netapp123
+        tripleo_sf1/san_ip:
+                value: 10.250.117.90
+        tripleo_sf1/sf_account_prefix:
+                value: dci
+        tripleo_sf1/image_volume_cache_enabled:
+                value: True
+        tripleo_sf2/volume_driver:
+                value: cinder.volume.drivers.solidfire.SolidFireDriver
+        tripleo_sf2/volume_backend_name:
+                value: tripleo_sf2
+        tripleo_sf2/san_login:
+                value: openstack-ci
+        tripleo_sf2/san_password:
+                value: Netapp123
+        tripleo_sf2/san_ip:
+                value: 10.250.117.90
+        tripleo_sf2/sf_account_prefix:
+                value: dci
+        tripleo_sf2/image_volume_cache_enabled:
+                value: True
+    cinder_user_enabled_backends: ['tripleo_netapp_nfs','tripleo_netapp_iscsi','tripleo_sf1','tripleo_sf2']
