@@ -1,38 +1,60 @@
 dci_topic: OSP14
+undercloud_ip: 192.168.210.110
+pm_addr: 192.168.210.1
+undercloud_password: netapp123
+rhsm_username: bala.ramesh
+rhsm_password: Ndkshyw112!
+rhsm_pool_ids: 8a85f99b68b9397301690ad704cc404d
+openstack_dnsservers: [8.8.4.4]
+overcloud_controller_mac: "52:54:00:ff:ab:62"
+overcloud_controller_pm_port: "6246"
+overcloud_compute_mac: "52:54:00:6a:56:ba"
+overcloud_compute_pm_port: "6247"
+openstack_release_name: "rocky"
 
 netapp_nfs_backend:
   backendname: tripleo_netapp_nfs
   username: admin
-  password: password
-  hostname: 192.168.112.113
-  vserver: bala
-  nfsshares: 192.168.112.114:/test
+  password: Netapp123
+  hostname: 10.193.154.50
+  vserver: bala_manila
+  nfsshares: '10.193.153.164:/nfs_flex'
 
 netapp_iscsi_backend:
   backendname: tripleo_netapp_iscsi
   username: admin
-  password: password
-  hostname: 192.168.112.113
-  vserver: iscsi_vserver
-
-undercloud_ip: 192.168.122.170
-rhsm_username: 
-rhsm_password: 
-rhsm_pool_ids: 
-openstack_dnsservers: [8.8.4.4]
-overcloud_controller_mac: "52:54:00:b9:fd:1d"
-overcloud_controller_pm_port: "6235"
-overcloud_compute_mac: "52:54:00:51:b1:29"
-overcloud_compute_pm_port: "6236"
-
-netapp_manila:
-  username: admin
-  password: password
-  hostname: hostname
-  rootvolumeaggr: root volume aggregate
+  password: Netapp123
+  hostname: 10.193.154.50
+  vserver: bala_cinder
 
 sf_backend:
-  username: admin
-  hostname: ip
-  password: password
+  username: openstack-ci
+  password: Netapp123
+  hostname: 10.250.117.90
   account_prefix: dci
+
+tempest_extra_config:
+  service_available.trove: false
+  service_available.ironic: false
+  service_available.mistral: false
+  service_available.zaqar: false
+  service_available.sahara: false
+  service_available.octavia: false
+  volume_feature_enabled.bootable: true
+  volume_feature_enabled.api_v2: true
+  volume_feature_enabled.api_v3: true
+  volume_feature_enabled.api_extensions: all
+  volume_feature_enabled.snapshot: True
+  volume_feature_enabled.extend_attached_volume: True
+  volume_feature_enabled.multi_backend: True
+  volume_feature_enabled.consistency_group: True
+  volume_feature_enabled.backup: True
+  volume.storage_protocol: iSCSI
+  volume.vendor_name: SolidFire Inc
+  volume.backend_names: tripleo_sf1,tripleo_sf2
+  volume.max_microversion: latest
+  compute.max_microversion: latest
+  compute_feature_enabled.volume_multiattach: True
+
+run_tripleo_validations: false
+run_tripleo_validations_setup: false
