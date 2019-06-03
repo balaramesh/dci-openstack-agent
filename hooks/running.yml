@@ -6,8 +6,15 @@
     # to store the release name in a local fact.
     - name: Set the openstack release name
       set_fact:
-        release: 'rocky'
+        release: '{{ openstack_release_name }}'
     
+    #- name: Set authorized key taken from file
+    #  authorized_key:
+    #    user: root
+    #    state: present
+    #    key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+    #  become: true
+
     - name: Create a stack user
       user:
         name: stack
@@ -32,6 +39,8 @@
       file:
         path: /home/stack/testfile
         state: touch
+      become_user: stack
+      become: true
 
     - name: Create directories for installation
       file:
@@ -41,6 +50,7 @@
         - images
         - templates
       become_user: stack
+      become: true
 
     # If you need new configuration keys, you can them in your settings.yml.
     # They will be available in the playbook as regular Ansible variables.
@@ -91,13 +101,13 @@
         state: latest
       become: true
 
-    - name: Reboot the undercloud
-      shell: |
-        sleep 3
-        reboot
-      become: true
-      async: 1
-      poll: 0
+    #- name: Reboot the undercloud
+    #  shell: |
+    #    sleep 3
+    #    reboot
+    #  become: true
+    #  async: 1
+    #  poll: 0
 
     - name: Wait for the undercloud node to be back online
       wait_for:
@@ -118,6 +128,7 @@
         --local-push-destination \
         --output-env-file /home/stack/containers-prepare-parameter.yaml
       become_user: stack
+      become: true
     
     - name: Copy undercloud config template
       copy:
@@ -125,6 +136,7 @@
         dest: /home/stack/undercloud.conf
         remote_src: yes
       become_user: stack
+      become: true
 
     - name: Customize the undercloud config for containerized env
       ini_file:
@@ -139,9 +151,11 @@
         - {"section": "DEFAULT", "option": "local_interface", "value": "eth1"}
       when: release >= 'rocky'
       become_user: stack
+      become: true
 
     - name: Install the undercloud
       become_user: stack
+      become: true
       shell: openstack undercloud install
       args:
         chdir: /home/stack
@@ -162,6 +176,7 @@
         - ironic-python-agent-latest-14.0
         - overcloud-full-latest-14.0
       become_user: stack
+      become: true
 
     - name: Upload images to glance
       shell: |
@@ -181,6 +196,21 @@
         src: instackenv.yaml.j2
         dest: /home/stack/templates/instackenv.yaml
       become_user: stack
+      become: true
+
+    - name: Copy Cinder generic template
+      template:
+        src: cinder-backend.yaml.j2
+        dest: /home/stack/templates/cinder-backend.yaml
+      become_user: stack
+      become: true
+
+    - name: Copy Cinder NetApp NFS template
+      template:
+        src: cinder-netapp-nfs.yaml.j2
+        dest: /home/stack/templates/cinder-netapp-nfs.yaml
+      become_user: stack
+      become: true
 
     - name: Import the overcloud nodes
       shell: |
@@ -203,11 +233,18 @@
         src: node-info.yaml.j2
         dest: /home/stack/templates/node-info.yaml
       become_user: stack
+      become: true
 
     - name: Deploy the overcloud
       shell: |
         source /home/stack/stackrc
         openstack overcloud deploy --templates -e /home/stack/templates/node-info.yaml \
         -e /home/stack/containers-prepare-parameter.yaml \
-        -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml
+        -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml \
+        -e /home/stack/templates/cinder-backend.yaml \
+        -e /home/stack/templates/cinder-netapp-nfs.yaml \
+        -t 150
+      args:
+        chdir: /home/stack/
       become_user: stack
+      become: true
